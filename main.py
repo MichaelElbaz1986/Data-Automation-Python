@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[215]:
-
 
 
 import json
@@ -10,48 +5,6 @@ import boto3
 import base64
 import prestodb
 from botocore.exceptions import ClientError
-
-def get_secret():
-    secret_name = "data/automation/presto"
-    region_name = "us-east-1"
-
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name,
-    )
-
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId=secret_name
-        )
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ResourceNotFoundException':
-            print("The requested secret " + secret_name + " was not found")
-        elif e.response['Error']['Code'] == 'InvalidRequestException':
-            print("The request was invalid due to:", e)
-        elif e.response['Error']['Code'] == 'InvalidParameterException':
-            print("The request had invalid params:", e)
-    else:
-        # Secrets Manager decrypts the secret value using the associated KMS CMK
-        # Depending on whether the secret was a string or binary, only one of these fields will be populated
-        text_secret_data = get_secret_value_response['SecretString']
-        host = json.loads(text_secret_data)['host']
-        port = json.loads(text_secret_data)['port']
-        user = json.loads(text_secret_data)['user']
-        catalog = json.loads(text_secret_data)['catalog']
-        return (host,port,user,catalog)   
-
-def presto_connect_db():
-    get_secrate_name = get_secret()
-    conn = prestodb.dbapi.connect(
-    host=get_secrate_name[0],
-    port= int(get_secrate_name[1]),
-    user=get_secrate_name[2],
-    catalog=get_secrate_name[3],)
-    cur = conn.cursor()
-    
-    return(cur)
 
 def drop_old_table_MC_report():
     cur.execute("drop table agg_cyber.bf_mc_logs")
